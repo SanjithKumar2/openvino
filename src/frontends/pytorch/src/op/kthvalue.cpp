@@ -19,6 +19,7 @@ namespace op{
         auto input = context.get_input(0);
         auto k = context.get_input(1);
         auto dim = context.get_input(2);
+        bool keepdim = false;
 
         auto tensor_rank = std::get<1>(get_shape_rank(context, input, false));
         auto tensor_rank_correct_type = context.mark_node(std::make_shared<ov::op::v1::ConvertLike>(tensor_rank, dim));
@@ -32,10 +33,13 @@ namespace op{
             element::i64
         ));
 
+        Output<Node> values = topk -> output(0);
+        Output<Node> indices = topk -> output(1);
+        if (!keepdim){
         auto const_axis = context.mark_node(ov::op::v0::Constant::create(element::i32, Shape{1}, {1}));
         auto values = context.mark_node(std::make_shared<ov::op::v0::Squeeze>(topk->output(0), const_axis));
         auto indices = context.mark_node(std::make_shared<ov::op::v0::Squeeze>(topk->output(1), const_axis));
-
+        }
         return {values, indices};
     }
 } 
